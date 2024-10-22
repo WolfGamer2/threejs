@@ -8,10 +8,12 @@
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
         #score { position: absolute; top: 20px; left: 20px; color: white; font-size: 24px; }
+        #project-info { position: absolute; bottom: 20px; left: 20px; color: white; background: rgba(0, 0, 0, 0.5); padding: 10px; border-radius: 5px; display: none; }
     </style>
 </head>
 <body>
     <div id="score">Score: 0</div>
+    <div id="project-info"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Scene setup
@@ -24,6 +26,7 @@
         // Score variable
         let score = 0;
         const scoreDisplay = document.getElementById('score');
+        const projectInfoDisplay = document.getElementById('project-info');
 
         // Add ground with grass texture
         const groundGeometry = new THREE.PlaneGeometry(20, 20);
@@ -49,11 +52,11 @@
         }
 
         // Create multiple trees
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 15; i++) {
             createTree((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15);
         }
 
-        // Create a glowing orb collectible
+        // Create glowing orb collectibles
         function createCollectible(x, z) {
             const orbGeometry = new THREE.SphereGeometry(0.2, 32, 32);
             const orbMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, emissive: 0xffff00 }); // Yellow orb
@@ -63,17 +66,52 @@
             scene.add(orb);
         }
 
-        // Create a few collectibles
-        createCollectible(2, -2);
-        createCollectible(-3, 3);
+        // Create multiple collectibles
+        for (let i = 0; i < 5; i++) {
+            createCollectible((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15);
+        }
+
+        // Create project area
+        function createProjectArea(x, z, projectName, projectDescription) {
+            const areaGeometry = new THREE.BoxGeometry(1, 0.1, 1);
+            const areaMaterial = new THREE.MeshBasicMaterial({ color: 0x4682B4 }); // Blue area
+            const area = new THREE.Mesh(areaGeometry, areaMaterial);
+            area.position.set(x, 0.05, z);
+            area.userData = { type: 'project', name: projectName, description: projectDescription };
+            scene.add(area);
+        }
+
+        // Create some project areas
+        createProjectArea(3, 2, 'Project A', 'This is a description of Project A.');
+        createProjectArea(-2, -3, 'Project B', 'This is a description of Project B.');
+
+        // Add guiding creature
+        const creatureGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+        const creatureMaterial = new THREE.MeshBasicMaterial({ color: 0xFF69B4 }); // Pink creature
+        const creature = new THREE.Mesh(creatureGeometry, creatureMaterial);
+        creature.position.set(0, 0.5, 0);
+        scene.add(creature);
 
         // Set camera position
         camera.position.set(0, 3, 5);
         camera.lookAt(0, 0, 0);
 
+        // Ambient sound
+        const listener = new THREE.AudioListener();
+        camera.add(listener);
+        const sound = new THREE.Audio(listener);
+        const audioLoader = new THREE.AudioLoader();
+        audioLoader.load('https://www.soundjay.com/nature/sounds/bird-singing-1.mp3', function(buffer) {
+            sound.setBuffer(buffer);
+            sound.setLoop(true);
+            sound.setVolume(0.5);
+            sound.play();
+        });
+
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
+            creature.position.x = Math.sin(Date.now() * 0.001) * 2; // Make the creature move
             renderer.render(scene, camera);
         }
 
@@ -94,6 +132,9 @@
                     score++;
                     scoreDisplay.textContent = 'Score: ' + score;
                     scene.remove(object); // Remove the collectible
+                } else if (object.userData.type === 'project') {
+                    projectInfoDisplay.textContent = object.userData.name + ': ' + object.userData.description;
+                    projectInfoDisplay.style.display = 'block';
                 }
             }
         });
