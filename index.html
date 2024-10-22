@@ -8,7 +8,7 @@
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
         #score { position: absolute; top: 20px; left: 20px; color: white; font-size: 24px; }
-        #project-info { position: absolute; bottom: 20px; left: 20px; color: white; background: rgba(0, 0, 0, 0.5); padding: 10px; border-radius: 5px; display: none; }
+        #project-info { position: absolute; bottom: 20px; left: 20px; color: white; background: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 5px; display: none; }
     </style>
 </head>
 <body>
@@ -28,17 +28,37 @@
         const scoreDisplay = document.getElementById('score');
         const projectInfoDisplay = document.getElementById('project-info');
 
-        // Add ground with grass texture
+        // Create a ground plane
         const groundGeometry = new THREE.PlaneGeometry(20, 20);
-        const grassTexture = new THREE.TextureLoader().load('https://cdn.pixabay.com/photo/2014/05/02/14/58/grass-33682_960_720.png'); // Grass texture
-        const groundMaterial = new THREE.MeshBasicMaterial({ map: grassTexture });
+        const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 }); // Grass color
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
         ground.rotation.x = -Math.PI / 2; // Rotate to lay flat
         scene.add(ground);
 
-        // Create a simple tree
+        // Create a clearing for a project
+        function createClearing(x, z, projectName, projectDescription) {
+            const clearingGeometry = new THREE.CircleGeometry(2.5, 32);
+            const clearingMaterial = new THREE.MeshBasicMaterial({ color: 0xA0D0A0, side: THREE.DoubleSide }); // Clearing color
+            const clearing = new THREE.Mesh(clearingGeometry, clearingMaterial);
+            clearing.position.set(x, 0.01, z);
+            scene.add(clearing);
+
+            // Add project marker
+            const projectMarker = new THREE.Sprite(new THREE.SpriteMaterial({ color: 0xFF6347 }));
+            projectMarker.scale.set(0.4, 0.4, 1);
+            projectMarker.position.set(x, 0.1, z);
+            projectMarker.userData = { type: 'project', name: projectName, description: projectDescription };
+            scene.add(projectMarker);
+        }
+
+        // Create clearings for different projects
+        createClearing(3, 2, 'Project A', 'Description of Project A.');
+        createClearing(-4, -3, 'Project B', 'Description of Project B.');
+        createClearing(-2, 4, 'Project C', 'Description of Project C.');
+
+        // Create trees around the scene
         function createTree(x, z) {
-            const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.1, 1, 8);
+            const trunkGeometry = new THREE.CylinderGeometry(0.1, 0.2, 1, 8);
             const trunkMaterial = new THREE.MeshBasicMaterial({ color: 0x8B4513 }); // Brown trunk
             const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
             trunk.position.set(x, 0.5, z);
@@ -47,7 +67,7 @@
             const foliageGeometry = new THREE.SphereGeometry(0.5, 16, 16);
             const foliageMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 }); // Green foliage
             const foliage = new THREE.Mesh(foliageGeometry, foliageMaterial);
-            foliage.position.set(x, 1.5, z);
+            foliage.position.set(x, 1.3, z);
             scene.add(foliage);
         }
 
@@ -56,66 +76,17 @@
             createTree((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15);
         }
 
-        // Create glowing orb collectibles
-        function createCollectible(x, z) {
-            const orbGeometry = new THREE.SphereGeometry(0.2, 32, 32);
-            const orbMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, emissive: 0xffff00 }); // Yellow orb
-            const orb = new THREE.Mesh(orbGeometry, orbMaterial);
-            orb.position.set(x, 0.2, z);
-            orb.userData = { type: 'collectible' }; // Add type data
-            scene.add(orb);
-        }
-
-        // Create multiple collectibles
-        for (let i = 0; i < 5; i++) {
-            createCollectible((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15);
-        }
-
-        // Create project area
-        function createProjectArea(x, z, projectName, projectDescription) {
-            const areaGeometry = new THREE.BoxGeometry(1, 0.1, 1);
-            const areaMaterial = new THREE.MeshBasicMaterial({ color: 0x4682B4 }); // Blue area
-            const area = new THREE.Mesh(areaGeometry, areaMaterial);
-            area.position.set(x, 0.05, z);
-            area.userData = { type: 'project', name: projectName, description: projectDescription };
-            scene.add(area);
-        }
-
-        // Create some project areas
-        createProjectArea(3, 2, 'Project A', 'This is a description of Project A.');
-        createProjectArea(-2, -3, 'Project B', 'This is a description of Project B.');
-
-        // Add guiding creature
-        const creatureGeometry = new THREE.SphereGeometry(0.15, 32, 32);
-        const creatureMaterial = new THREE.MeshBasicMaterial({ color: 0xFF69B4 }); // Pink creature
-        const creature = new THREE.Mesh(creatureGeometry, creatureMaterial);
-        creature.position.set(0, 0.5, 0);
-        scene.add(creature);
-
         // Set camera position
         camera.position.set(0, 3, 5);
         camera.lookAt(0, 0, 0);
 
-        // Ambient sound
-        const listener = new THREE.AudioListener();
-        camera.add(listener);
-        const sound = new THREE.Audio(listener);
-        const audioLoader = new THREE.AudioLoader();
-        audioLoader.load('https://www.soundjay.com/nature/sounds/bird-singing-1.mp3', function(buffer) {
-            sound.setBuffer(buffer);
-            sound.setLoop(true);
-            sound.setVolume(0.5);
-            sound.play();
-        });
-
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
-            creature.position.x = Math.sin(Date.now() * 0.001) * 2; // Make the creature move
             renderer.render(scene, camera);
         }
 
-        // Handle clicks
+        // Handle clicks on project markers
         window.addEventListener('click', (event) => {
             const mouse = new THREE.Vector2(
                 (event.clientX / window.innerWidth) * 2 - 1,
@@ -128,11 +99,7 @@
             const intersects = raycaster.intersectObjects(scene.children);
             if (intersects.length > 0) {
                 const object = intersects[0].object;
-                if (object.userData.type === 'collectible') {
-                    score++;
-                    scoreDisplay.textContent = 'Score: ' + score;
-                    scene.remove(object); // Remove the collectible
-                } else if (object.userData.type === 'project') {
+                if (object.userData.type === 'project') {
                     projectInfoDisplay.textContent = object.userData.name + ': ' + object.userData.description;
                     projectInfoDisplay.style.display = 'block';
                 }
