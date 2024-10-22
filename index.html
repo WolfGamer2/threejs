@@ -7,13 +7,12 @@
     <style>
         body { margin: 0; overflow: hidden; }
         canvas { display: block; }
-        #score { position: absolute; top: 20px; left: 20px; color: white; font-size: 24px; }
         #project-info { position: absolute; bottom: 20px; left: 20px; color: white; background: rgba(0, 0, 0, 0.7); padding: 10px; border-radius: 5px; display: none; }
     </style>
 </head>
 <body>
-    <div id="score">Score: 0</div>
     <div id="project-info"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Scene setup
@@ -23,12 +22,17 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Score variable
-        let score = 0;
-        const scoreDisplay = document.getElementById('score');
-        const projectInfoDisplay = document.getElementById('project-info');
+        // Create sky background
+        const skyGeometry = new THREE.SphereGeometry(100, 32, 32);
+        const skyMaterial = new THREE.MeshBasicMaterial({
+            color: 0x87CEEB, // Sky blue
+            side: THREE.DoubleSide
+        });
+        const sky = new THREE.Mesh(skyGeometry, skyMaterial);
+        sky.position.set(0, 0, 0);
+        scene.add(sky);
 
-        // Create a ground plane
+        // Create ground plane
         const groundGeometry = new THREE.PlaneGeometry(20, 20);
         const groundMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 }); // Grass color
         const ground = new THREE.Mesh(groundGeometry, groundMaterial);
@@ -76,6 +80,13 @@
             createTree((Math.random() - 0.5) * 15, (Math.random() - 0.5) * 15);
         }
 
+        // Create bug character
+        const bugGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+        const bugMaterial = new THREE.MeshBasicMaterial({ color: 0xFFD700 }); // Yellow bug
+        const bug = new THREE.Mesh(bugGeometry, bugMaterial);
+        bug.position.set(0, 0.1, 0);
+        scene.add(bug);
+
         // Set camera position
         camera.position.set(0, 3, 5);
         camera.lookAt(0, 0, 0);
@@ -85,6 +96,24 @@
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
         }
+
+        // Move the bug with arrow keys
+        window.addEventListener('keydown', (event) => {
+            switch(event.key) {
+                case 'ArrowUp':
+                    bug.position.z -= 0.1;
+                    break;
+                case 'ArrowDown':
+                    bug.position.z += 0.1;
+                    break;
+                case 'ArrowLeft':
+                    bug.position.x -= 0.1;
+                    break;
+                case 'ArrowRight':
+                    bug.position.x += 0.1;
+                    break;
+            }
+        });
 
         // Handle clicks on project markers
         window.addEventListener('click', (event) => {
