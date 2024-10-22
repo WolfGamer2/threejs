@@ -13,7 +13,6 @@
 <body>
     <div id="project-info"></div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         // Scene setup
         const scene = new THREE.Scene();
@@ -87,14 +86,20 @@
         bug.position.set(0, 0.1, 0);
         scene.add(bug);
 
-        // Set camera position
-        camera.position.set(0, 3, 5);
-        camera.lookAt(0, 0, 0);
+        // Set camera position to follow the bug
+        camera.position.set(0, 0.5, 1); // Slightly above the bug
+        camera.lookAt(bug.position);
 
         // Animation loop
         function animate() {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
+
+            // Make the camera follow the bug's position
+            camera.position.x = bug.position.x;
+            camera.position.z = bug.position.z;
+            camera.position.y = 0.5; // Keep the camera above the ground
+            camera.lookAt(bug.position);
         }
 
         // Move the bug with arrow keys
